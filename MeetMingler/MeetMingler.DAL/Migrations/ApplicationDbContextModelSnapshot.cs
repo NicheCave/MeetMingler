@@ -90,9 +90,6 @@ namespace MeetMingler.DAL.Migrations
                     b.Property<Guid>("EventId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
                     b.HasKey("UserId", "EventId");
 
                     b.HasIndex("EventId");
