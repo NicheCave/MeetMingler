@@ -9,18 +9,24 @@ namespace MeetMingler.WebHost.Controllers;
 
 public class BaseController(IAuthService authService, ICurrentUser currentUser) : Controller
 {
-    public override void OnActionExecuting(ActionExecutingContext filterContext)
+    public override async Task OnActionExecutionAsync(ActionExecutingContext filterContext,
+        ActionExecutionDelegate next)
     {
-        base.OnActionExecuting(filterContext);
-
         var hasAllowAnonymous = filterContext.ActionDescriptor.EndpointMetadata
             .Any(em => em.GetType() == typeof(AllowAnonymousAttribute));
 
-        if (hasAllowAnonymous) return;
+        if (!hasAllowAnonymous)
+        {
+            var user = await authService.AuthenticateUserAsync(User, filterContext.HttpContext.RequestAborted);
+            if (user == null)
+            {
+                filterContext.Result = Unauthorized();
+                return;
+            }
 
-        var user = authService.AuthenticateUserAsync(User).GetAwaiter().GetResult();
-        if (user == null)
-            filterContext.Result = Unauthorized();
-        else currentUser.User = user;
+            currentUser.User = user;
+        }
+
+        await base.OnActionExecutionAsync(filterContext, next);
     }
 }

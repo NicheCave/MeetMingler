@@ -1,13 +1,15 @@
 using AutoMapper;
+using MeetMingler.BLL.Caching;
 using MeetMingler.BLL.Models.User;
 using MeetMingler.BLL.Services.Contracts;
 using MeetMingler.DAL.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MeetMingler.BLL.Services.Implementations;
 
-public class UserService(UserManager<User> userManager, IMapper mapper)
+public class UserService(UserManager<User> userManager, IMapper mapper, IMemoryCache cache)
     : IUserService
 {
     public async Task<UserVM?> CreateAsync(UserIM im, CancellationToken cf = default)
@@ -40,6 +42,7 @@ public class UserService(UserManager<User> userManager, IMapper mapper)
         if (!result.Succeeded)
             throw new IdentityException(result.Errors);
 
+        cache.Remove(CacheKeys.User(id));
         return true;
     }
 }
